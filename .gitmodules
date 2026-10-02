@@ -1,0 +1,3 @@
+[submodule "lectures"]
+	path = lectures
+	url = https://github.com/quicklybly/big-data-lectures.git
