@@ -1,0 +1,114 @@
+x-datanode: &datanode
+  image: apache/hadoop:3.5.0
+  restart: always
+  command: [ "hdfs", "datanode" ]
+  env_file:
+    - ./hadoop.env
+  healthcheck:
+    test: [ "CMD-SHELL", "bash -c '</dev/tcp/localhost/9864'" ]
+    interval: 10s
+    retries: 12
+  depends_on:
+    namenode:
+      condition: service_healthy
+
+services:
+  volume-init:
+    image: busybox
+    command: [ "sh", "-c", "chown -R 1001:1001 /data" ]
+    volumes:
+      - ./data:/data
+
+  namenode:
+    image: apache/hadoop:3.5.0
+    container_name: namenode
+    hostname: namenode
+    restart: always
+    command: [ "hdfs", "namenode" ]
+    ports:
+      - "9870:9870"   # HDFS web UI
+      - "9000:9000"   # HDFS RPC
+    env_file:
+      - ./hadoop.env
+    environment:
+      ENSURE_NAMENODE_DIR: "/hadoop/dfs/name/current"
+    volumes:
+      - ./data/namenode:/hadoop/dfs/name
+      - ./input:/opt/input:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c '</dev/tcp/localhost/9870'" ]
+      interval: 10s
+      retries: 12
+    depends_on:
+      volume-init:
+        condition: service_completed_successfully
+
+  datanode1:
+    <<: *datanode
+    container_name: datanode1
+    hostname: datanode1
+    volumes:
+      - ./data/datanode1:/hadoop/dfs/data
+
+  datanode2:
+    <<: *datanode
+    container_name: datanode2
+    hostname: datanode2
+    volumes:
+      - ./data/datanode2:/hadoop/dfs/data
+
+  datanode3:
+    <<: *datanode
+    container_name: datanode3
+    hostname: datanode3
+    volumes:
+      - ./data/datanode3:/hadoop/dfs/data
+
+  resourcemanager:
+    image: apache/hadoop:3.5.0
+    container_name: resourcemanager
+    hostname: resourcemanager
+    restart: always
+    # RM writes its state store to HDFS, so wait until the NameNode leaves safe mode
+    command: [ "bash", "-c", "hdfs dfsadmin -safemode wait && exec yarn resourcemanager" ]
+    ports:
+      - "8088:8088"
+    env_file:
+      - ./hadoop.env
+    #    volumes:
+    #      - ../jobs:/opt/jobs
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c '</dev/tcp/resourcemanager/8088'" ]
+      interval: 10s
+      retries: 12
+      start_period: 60s
+    depends_on:
+      datanode1:
+        condition: service_healthy
+
+  nodemanager:
+    image: apache/hadoop:3.5.0
+    container_name: nodemanager
+    restart: always
+    command: [ "yarn", "nodemanager" ]
+    ports:
+      - "8042:8042"
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      resourcemanager:
+        condition: service_healthy
+
+  historyserver:
+    image: apache/hadoop:3.5.0
+    container_name: historyserver
+    hostname: historyserver
+    restart: always
+    command: [ "mapred", "historyserver" ]
+    ports:
+      - "19888:19888"
+    env_file:
+      - ./hadoop.env
+    depends_on:
+      datanode1:
+        condition: service_healthy
