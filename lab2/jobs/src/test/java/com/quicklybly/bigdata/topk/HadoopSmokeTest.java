@@ -4,7 +4,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 class HadoopSmokeTest {
 
@@ -15,7 +16,7 @@ class HadoopSmokeTest {
 
         Job job = Job.getInstance(conf, "smoke");
 
-        assertEquals("smoke", job.getJobName());
-        assertEquals(17, Runtime.version().feature());
+        assertThat(job.getJobName()).isEqualTo("smoke");
+        assertThat(Runtime.version().feature()).isEqualTo(17);
     }
 }

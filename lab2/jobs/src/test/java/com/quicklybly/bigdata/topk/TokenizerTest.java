@@ -3,9 +3,9 @@ package com.quicklybly.bigdata.topk;
 import com.quicklybly.bigdata.topk.utils.Tokenizer;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+
 
 class TokenizerTest {
 
@@ -13,20 +13,20 @@ class TokenizerTest {
     void splitsAndLowercasesWithoutLemmatization() {
         var tokenizer = new Tokenizer(false);
 
-        assertEquals(List.of("the", "whales", "o'er", "the", "sea"),
-                tokenizer.tokenize("The whales, o'er the sea!").toList());
+        assertThat(tokenizer.tokenize("The whales, o'er the sea!"))
+                .containsExactly("the", "whales", "o'er", "the", "sea");
     }
 
     @Test
     void lemmatizes() {
         var tokenizer = new Tokenizer(true);
 
-        assertEquals(List.of("the", "whale", "be", "swim", "in", "the", "sea"),
-                tokenizer.tokenize("The whales were swimming in the sea.").toList());
+        assertThat(tokenizer.tokenize("The whales were swimming in the sea."))
+                .containsExactly("the", "whale", "be", "swim", "in", "the", "sea");
     }
 
     @Test
     void emptyLine() {
-        assertEquals(List.of(), new Tokenizer(true).tokenize("  *** ").toList());
+        assertThat(new Tokenizer(true).tokenize("  *** ")).isEmpty();
     }
 }

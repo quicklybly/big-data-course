@@ -35,6 +35,8 @@ dependencies {
     testRuntimeOnly("org.apache.hadoop:hadoop-client-runtime:$hadoopVersion")
     testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.assertj:assertj-core:3.27.7")
+    testImplementation("org.mockito:mockito-core:5.24.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -51,6 +53,8 @@ sourceSets.main {
 
 tasks.test {
     useJUnitPlatform()
+    // Mockito's inline mock maker extends the boot classpath, which conflicts with class data sharing
+    jvmArgs("-Xshare:off")
 }
 
 tasks.jar {
