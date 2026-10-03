@@ -17,9 +17,9 @@ database "HDFS (SequencedFile)" as Tmp
 
 package "Job 2: Top-K" {
     [SequenceFileInputFormat] as Input2
-    collections "TopKMapper\n(локальный min-K)" as Map2
-    control "Shuffle / Sort\n(DecreasingComparator)" as Shuf2
-    component "TopKReducer\n" as Red2
+    collections "TopKMapper\n(локальный top-K, heap)" as Map2
+    control "Shuffle / Sort\n(CountWordKey:\ncount desc, word asc)" as Shuf2
+    component "TopKReducer\n(первые K ключей)" as Red2
 }
 
 database "HDFS output\n(text: word \\t count)" as Out
@@ -33,9 +33,9 @@ Red1 --> Tmp : (word, total)
 
 Tmp --> Input2
 Input2 -l-> Map2 : (word, total)
-Map2 -l-> Shuf2 : (total, word)\nonly M x K records
-Shuf2 -l-> Red2 : (total, [word...])\nmerge sort
-Red2 -l-> Out : top-K (word, total)
+Map2 -l-> Shuf2 : ((total, word), null)\nonly M x K records
+Shuf2 -l-> Red2 : ((total, word), null)\nглобально отсортировано
+Red2 -l-> Out : first K (word, total)
 
 ' layout hints: keep Out at the left end of the Job 2 row
 In -[hidden]d-> Out

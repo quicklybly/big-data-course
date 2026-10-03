@@ -32,4 +32,25 @@ class TopKDriverTest {
         assertThat(Files.readAllLines(output.resolve("part-r-00000")))
                 .containsExactly("the\t5", "whale\t3", "sea\t2");
     }
+
+    @Test
+    void breaksTiesAlphabetically(@TempDir Path dir) throws Exception {
+        Path input = Files.createDirectory(dir.resolve("in"));
+        Files.writeString(input.resolve("a.txt"), "the the pear kiwi\n");
+        Files.writeString(input.resolve("b.txt"), "fig apple banana\n");
+        Path output = dir.resolve("out");
+
+        Configuration conf = new Configuration();
+        conf.set("mapreduce.framework.name", "local");
+        conf.set("fs.defaultFS", "file:///");
+        conf.setBoolean(TokenizeMapper.LEMMATIZE_PROPERTY, false);
+
+        int exitCode = ToolRunner.run(conf, new TopKDriver(),
+                new String[]{input.toUri().toString(), output.toUri().toString(), "4", "2"});
+
+        assertThat(exitCode).isZero();
+        // five words share count 1, the cut at K keeps the alphabetically first ones
+        assertThat(Files.readAllLines(output.resolve("part-r-00000")))
+                .containsExactly("the\t2", "apple\t1", "banana\t1", "fig\t1");
+    }
 }

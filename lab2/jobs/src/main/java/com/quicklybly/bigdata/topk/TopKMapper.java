@@ -1,30 +1,24 @@
 package com.quicklybly.bigdata.topk;
 
+import com.quicklybly.bigdata.topk.utils.WordCount;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.IOException;
-import java.util.Comparator;
 import java.util.PriorityQueue;
 
 /**
- * (word, total) -> local top-K as (total, word), emitted in cleanup()
+ * (word, total) -> local top-K as ((total, word), null), emitted in cleanup()
  */
-public class TopKMapper extends Mapper<Text, LongWritable, LongWritable, Text> {
+public class TopKMapper extends Mapper<Text, LongWritable, CountWordKey, NullWritable> {
 
-    private record WordCount(String word, long count) {
-    }
-
-    private static final Comparator<WordCount> WORST_FIRST = Comparator
-            .comparingLong(WordCount::count)
-            .thenComparing(WordCount::word, Comparator.reverseOrder());
-
-    private final PriorityQueue<WordCount> heap = new PriorityQueue<>(WORST_FIRST);
+    private final PriorityQueue<WordCount> heap = new PriorityQueue<>(WordCount.WORST_FIRST);
     private int k;
 
     @Override
-    protected void setup(Mapper<Text, LongWritable, LongWritable, Text>.Context context) {
+    protected void setup(Mapper<Text, LongWritable, CountWordKey, NullWritable>.Context context) {
         k = context.getConfiguration().getInt(TopKDriver.K_PROPERTY, 10);
     }
 
@@ -32,7 +26,7 @@ public class TopKMapper extends Mapper<Text, LongWritable, LongWritable, Text> {
     protected void map(
             Text key,
             LongWritable value,
-            Mapper<Text, LongWritable, LongWritable, Text>.Context context
+            Mapper<Text, LongWritable, CountWordKey, NullWritable>.Context context
     ) {
         heap.add(new WordCount(key.toString(), value.get()));
         if (heap.size() > k) {
@@ -41,14 +35,12 @@ public class TopKMapper extends Mapper<Text, LongWritable, LongWritable, Text> {
     }
 
     @Override
-    protected void cleanup(Mapper<Text, LongWritable, LongWritable, Text>.Context context)
+    protected void cleanup(Mapper<Text, LongWritable, CountWordKey, NullWritable>.Context context)
             throws IOException, InterruptedException {
-        var count = new LongWritable();
-        var word = new Text();
+        var key = new CountWordKey();
         for (var wc : heap) {
-            count.set(wc.count());
-            word.set(wc.word());
-            context.write(count, word);
+            key.set(wc.count(), wc.word());
+            context.write(key, NullWritable.get());
         }
     }
 }

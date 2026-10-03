@@ -5,6 +5,7 @@ import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -30,7 +31,7 @@ public class TopKDriver extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
         if (args.length < 2) {
-            System.err.println("Usage: TopKDriver input output [k] [reducers] [useCombiner]");
+            System.err.println("Usage: TopKDriver [-D prop=value] input output [k] [reducers] [useCombiner] [cleanTmp]");
             return 2;
         }
         var input = new Path(args[0]);
@@ -38,7 +39,7 @@ public class TopKDriver extends Configured implements Tool {
         int k = args.length > 2 ? Integer.parseInt(args[2]) : 10;
         int numberOfReduceTasks = args.length > 3 ? Integer.parseInt(args[3]) : 1;
         boolean useCombiner = args.length <= 4 || Boolean.parseBoolean(args[4]);
-        boolean cleanOutput = args.length <= 5 || Boolean.parseBoolean(args[5]);
+        boolean cleanTmp = args.length <= 5 || Boolean.parseBoolean(args[5]);
 
         Configuration conf = getConf();
         conf.setInt(K_PROPERTY, k);
@@ -56,7 +57,7 @@ public class TopKDriver extends Configured implements Tool {
                 return topK.waitForCompletion(true) ? 0 : 1;
             }
         } finally {
-            if (cleanOutput) {
+            if (cleanTmp) {
                 FileSystem.get(conf).delete(tempWordCount, true);
             }
         }
@@ -96,10 +97,8 @@ public class TopKDriver extends Configured implements Tool {
         job.setMapperClass(TopKMapper.class);
         job.setReducerClass(TopKReducer.class);
 
-        job.setMapOutputKeyClass(LongWritable.class);
-        job.setMapOutputValueClass(Text.class);
-
-        job.setSortComparatorClass(LongWritable.DecreasingComparator.class);
+        job.setMapOutputKeyClass(CountWordKey.class);
+        job.setMapOutputValueClass(NullWritable.class);
 
         job.setNumReduceTasks(1);
 

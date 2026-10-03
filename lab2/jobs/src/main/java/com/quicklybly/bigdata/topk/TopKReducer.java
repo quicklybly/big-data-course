@@ -1,49 +1,51 @@
 package com.quicklybly.bigdata.topk;
 
-import com.quicklybly.bigdata.topk.utils.WordCount;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
-import java.util.PriorityQueue;
 
 /**
- * (total, [word...]) from all mappers' local top-K -> global top-K (word, total), emitted in cleanup()
+ * ((total, word), null) from all mappers' local top-K -> global top-K (word, total).
+ * The shuffle already sorts keys by count desc, then word asc, so the first K keys are the answer.
  */
-public class TopKReducer extends Reducer<LongWritable, Text, Text, LongWritable> {
+public class TopKReducer extends Reducer<CountWordKey, NullWritable, Text, LongWritable> {
 
-    private final PriorityQueue<WordCount> heap = new PriorityQueue<>(WordCount.WORST_FIRST);
     private int k;
+    private int emitted;
+    private final LongWritable count = new LongWritable();
 
     @Override
-    protected void setup(Reducer<LongWritable, Text, Text, LongWritable>.Context context) {
+    protected void setup(Reducer<CountWordKey, NullWritable, Text, LongWritable>.Context context) {
         k = context.getConfiguration().getInt(TopKDriver.K_PROPERTY, 10);
     }
 
     @Override
     protected void reduce(
-            LongWritable key,
-            Iterable<Text> values,
-            Reducer<LongWritable, Text, Text, LongWritable>.Context context
-    ) {
-        for (var value : values) {
-            heap.add(new WordCount(value.toString(), key.get()));
-            if (heap.size() > k) {
-                heap.poll();
-            }
-        }
+            CountWordKey key,
+            Iterable<NullWritable> values,
+            Reducer<CountWordKey, NullWritable, Text, LongWritable>.Context context
+    ) throws IOException, InterruptedException {
+        count.set(key.getCount());
+        context.write(key.getWord(), count);
+        emitted++;
     }
 
+    /**
+     * Stops reading input after K keys instead of calling reduce() for the rest.
+     */
     @Override
-    protected void cleanup(Reducer<LongWritable, Text, Text, LongWritable>.Context context)
+    public void run(Reducer<CountWordKey, NullWritable, Text, LongWritable>.Context context)
             throws IOException, InterruptedException {
-        var word = new Text();
-        var count = new LongWritable();
-        for (var wc : heap.stream().sorted(WordCount.BEST_FIRST).toList()) {
-            word.set(wc.word());
-            count.set(wc.count());
-            context.write(word, count);
+        setup(context);
+        try {
+            while (emitted < k && context.nextKey()) {
+                reduce(context.getCurrentKey(), context.getValues(), context);
+            }
+        } finally {
+            cleanup(context);
         }
     }
 }

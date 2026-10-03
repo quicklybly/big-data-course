@@ -2,6 +2,7 @@ package com.quicklybly.bigdata.topk;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,13 +18,13 @@ import static org.mockito.Mockito.*;
 class TopKMapperTest {
 
     private final List<String> output = new ArrayList<>();
-    private Mapper<Text, LongWritable, LongWritable, Text>.Context context;
+    private Mapper<Text, LongWritable, CountWordKey, NullWritable>.Context context;
 
     @BeforeEach
     @SuppressWarnings("unchecked")
     void setUp() throws Exception {
         context = mock(Mapper.Context.class);
-        doAnswer(inv -> output.add(inv.getArgument(1) + "=" + inv.getArgument(0)))
+        doAnswer(inv -> output.add(inv.getArgument(0).toString()))
                 .when(context).write(any(), any());
     }
 
