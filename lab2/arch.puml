@@ -1,0 +1,47 @@
+@startuml
+!theme plain
+hide empty members
+skinparam componentStyle uml2
+
+database "HDFS" as In
+
+package "Job 1: Word Count" {
+    [TextInputFormat] as Input1
+    collections "TokenizeMapper\n(убрать знаки препинания, lowercase, etc)" as Map1
+    component "SumCombiner" as Comb
+    control "Shuffle / Sort" as Shuf1
+    collections "SumReducer" as Red1
+}
+
+database "HDFS (SequencedFile)" as Tmp
+
+package "Job 2: Top-K" {
+    [SequenceFileInputFormat] as Input2
+    collections "TopKMapper\n(локальный top-K, heap)" as Map2
+    control "Shuffle / Sort\n(CountWordKey:\ncount desc, word asc)" as Shuf2
+    component "TopKReducer\n(первые K ключей)" as Red2
+}
+
+database "HDFS output\n(text: word \\t count)" as Out
+
+In -> Input1
+Input1 -> Map1 : (offset, line)
+Map1 -> Comb : (word, 1)
+Comb -> Shuf1 : (word, partialSum)\nspill to disk
+Shuf1 -> Red1 : (word, [partialSum...])\nnetwork transfer
+Red1 --> Tmp : (word, total)
+
+Tmp --> Input2
+Input2 -l-> Map2 : (word, total)
+Map2 -l-> Shuf2 : ((total, word), null)\nonly M x K records
+Shuf2 -l-> Red2 : ((total, word), null)\nглобально отсортировано
+Red2 -l-> Out : first K (word, total)
+
+' layout hints: keep Out at the left end of the Job 2 row
+In -[hidden]d-> Out
+Out -[hidden]r-> Red2
+
+note top of Red2
+  numReduceTasks = 1
+end note
+@enduml

@@ -1,0 +1,158 @@
+docker exec -it resourcemanager yarn jar /opt/jobs/topk-jobs.jar -D topk.lemmatize=false /input/books /output/topk 20 3 false
+tempWordCount: /tmp/topk-wordcount-7848c275-dce1-42fa-98ad-30991561364b
+2026-10-03 12:01:10 INFO  DefaultNoHARMFailoverProxyProvider:64 - Connecting to ResourceManager at resourcemanager/172.18.0.7:8032
+2026-10-03 12:01:11 INFO  JobResourceUploader:907 - Disabling Erasure Coding for path: /tmp/hadoop-yarn/staging/hadoop/.staging/job_1791027154993_0004
+2026-10-03 12:01:11 INFO  FileInputFormat:303 - Total input files to process : 10
+2026-10-03 12:01:11 INFO  JobSubmitter:203 - number of splits:10
+2026-10-03 12:01:11 INFO  JobSubmitter:299 - Submitting tokens for job: job_1791027154993_0004
+2026-10-03 12:01:11 INFO  JobSubmitter:300 - Executing with tokens: []
+2026-10-03 12:01:11 INFO  Configuration:2885 - resource-types.xml not found
+2026-10-03 12:01:11 INFO  ResourceUtils:476 - Unable to find 'resource-types.xml'.
+2026-10-03 12:01:11 INFO  YarnClientImpl:356 - Submitted application application_1791027154993_0004
+2026-10-03 12:01:11 INFO  Job:1681 - The url to track the job: http://resourcemanager:8088/proxy/application_1791027154993_0004/
+2026-10-03 12:01:11 INFO  Job:1726 - Running job: job_1791027154993_0004
+2026-10-03 12:01:18 INFO  Job:1747 - Job job_1791027154993_0004 running in uber mode : false
+2026-10-03 12:01:18 INFO  Job:1754 -  map 0% reduce 0%
+2026-10-03 12:01:25 INFO  Job:1754 -  map 40% reduce 0%
+2026-10-03 12:01:26 INFO  Job:1754 -  map 60% reduce 0%
+2026-10-03 12:01:30 INFO  Job:1754 -  map 100% reduce 0%
+2026-10-03 12:01:32 INFO  Job:1754 -  map 100% reduce 67%
+2026-10-03 12:01:34 INFO  Job:1754 -  map 100% reduce 100%
+2026-10-03 12:01:34 INFO  Job:1765 - Job job_1791027154993_0004 completed successfully
+2026-10-03 12:01:34 INFO  Job:1772 - Counters: 55
+        File System Counters
+                FILE: Number of bytes read=2284458
+                FILE: Number of bytes written=9322836
+                FILE: Number of read operations=0
+                FILE: Number of large read operations=0
+                FILE: Number of write operations=0
+                HDFS: Number of bytes read=15060965
+                HDFS: Number of bytes written=1061363
+                HDFS: Number of read operations=45
+                HDFS: Number of large read operations=0
+                HDFS: Number of write operations=6
+                HDFS: Number of bytes read erasure-coded=0
+        Job Counters
+                Killed map tasks=1
+                Launched map tasks=10
+                Launched reduce tasks=3
+                Rack-local map tasks=10
+                Total time spent by all maps in occupied slots (ms)=46339
+                Total time spent by all reduces in occupied slots (ms)=11909
+                Total time spent by all map tasks (ms)=46339
+                Total time spent by all reduce tasks (ms)=11909
+                Total vcore-milliseconds taken by all map tasks=46339
+                Total vcore-milliseconds taken by all reduce tasks=11909
+                Total megabyte-milliseconds taken by all map tasks=47451136
+                Total megabyte-milliseconds taken by all reduce tasks=12194816
+        Map-Reduce Framework
+                Map input records=377002
+                Map output records=2650329
+                Map output bytes=34976680
+                Map output materialized bytes=2897043
+                Input split bytes=1072
+                Combine input records=0
+                Combine output records=0
+                Reduce input groups=43133
+                Reduce shuffle bytes=2897043
+                Reduce input records=2650329
+                Reduce output records=43133
+                Spilled Records=5300658
+                Shuffled Maps =30
+                Failed Shuffles=0
+                Merged Map outputs=30
+                GC time elapsed (ms)=390
+                CPU time spent (ms)=33350
+                Physical memory (bytes) snapshot=5996032000
+                Virtual memory (bytes) snapshot=44380049408
+                Total committed heap usage (bytes)=2637168640
+                Peak Map Physical memory (bytes)=564297728
+                Peak Map Virtual memory (bytes)=3422105600
+                Peak Reduce Physical memory (bytes)=411910144
+                Peak Reduce Virtual memory (bytes)=3426160640
+        Shuffle Errors
+                BAD_ID=0
+                CONNECTION=0
+                IO_ERROR=0
+                WRONG_LENGTH=0
+                WRONG_MAP=0
+                WRONG_REDUCE=0
+        File Input Format Counters
+                Bytes Read=15059893
+        File Output Format Counters
+                Bytes Written=1061363
+2026-10-03 12:01:34 INFO  DefaultNoHARMFailoverProxyProvider:64 - Connecting to ResourceManager at resourcemanager/172.18.0.7:8032
+2026-10-03 12:01:34 INFO  JobResourceUploader:907 - Disabling Erasure Coding for path: /tmp/hadoop-yarn/staging/hadoop/.staging/job_1791027154993_0005
+2026-10-03 12:01:34 INFO  FileInputFormat:303 - Total input files to process : 3
+2026-10-03 12:01:34 INFO  JobSubmitter:203 - number of splits:3
+2026-10-03 12:01:34 INFO  JobSubmitter:299 - Submitting tokens for job: job_1791027154993_0005
+2026-10-03 12:01:34 INFO  JobSubmitter:300 - Executing with tokens: []
+2026-10-03 12:01:34 INFO  YarnClientImpl:356 - Submitted application application_1791027154993_0005
+2026-10-03 12:01:34 INFO  Job:1681 - The url to track the job: http://resourcemanager:8088/proxy/application_1791027154993_0005/
+2026-10-03 12:01:34 INFO  Job:1726 - Running job: job_1791027154993_0005
+2026-10-03 12:01:40 INFO  Job:1747 - Job job_1791027154993_0005 running in uber mode : false
+2026-10-03 12:01:40 INFO  Job:1754 -  map 0% reduce 0%
+2026-10-03 12:01:47 INFO  Job:1754 -  map 100% reduce 0%
+2026-10-03 12:01:52 INFO  Job:1754 -  map 100% reduce 100%
+2026-10-03 12:01:52 INFO  Job:1765 - Job job_1791027154993_0005 completed successfully
+2026-10-03 12:01:52 INFO  Job:1772 - Counters: 54
+        File System Counters
+                FILE: Number of bytes read=547
+                FILE: Number of bytes written=1275275
+                FILE: Number of read operations=0
+                FILE: Number of large read operations=0
+                FILE: Number of write operations=0
+                HDFS: Number of bytes read=1061825
+                HDFS: Number of bytes written=189
+                HDFS: Number of read operations=17
+                HDFS: Number of large read operations=0
+                HDFS: Number of write operations=2
+                HDFS: Number of bytes read erasure-coded=0
+        Job Counters
+                Launched map tasks=3
+                Launched reduce tasks=1
+                Rack-local map tasks=3
+                Total time spent by all maps in occupied slots (ms)=10198
+                Total time spent by all reduces in occupied slots (ms)=2738
+                Total time spent by all map tasks (ms)=10198
+                Total time spent by all reduce tasks (ms)=2738
+                Total vcore-milliseconds taken by all map tasks=10198
+                Total vcore-milliseconds taken by all reduce tasks=2738
+                Total megabyte-milliseconds taken by all map tasks=10442752
+                Total megabyte-milliseconds taken by all reduce tasks=2803712
+        Map-Reduce Framework
+                Map input records=43133
+                Map output records=60
+                Map output bytes=717
+                Map output materialized bytes=611
+                Input split bytes=462
+                Combine input records=0
+                Combine output records=0
+                Reduce input groups=20
+                Reduce shuffle bytes=611
+                Reduce input records=20
+                Reduce output records=20
+                Spilled Records=60
+                Shuffled Maps =3
+                Failed Shuffles=0
+                Merged Map outputs=3
+                GC time elapsed (ms)=55
+                CPU time spent (ms)=4500
+                Physical memory (bytes) snapshot=1570095104
+                Virtual memory (bytes) snapshot=13645578240
+                Total committed heap usage (bytes)=596639744
+                Peak Map Physical memory (bytes)=417837056
+                Peak Map Virtual memory (bytes)=3412070400
+                Peak Reduce Physical memory (bytes)=329547776
+                Peak Reduce Virtual memory (bytes)=3410878464
+        Shuffle Errors
+                BAD_ID=0
+                CONNECTION=0
+                IO_ERROR=0
+                WRONG_LENGTH=0
+                WRONG_MAP=0
+                WRONG_REDUCE=0
+        File Input Format Counters
+                Bytes Read=1061363
+        File Output Format Counters
+                Bytes Written=189
