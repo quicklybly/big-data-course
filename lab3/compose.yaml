@@ -1,0 +1,142 @@
+services:
+
+  minio:
+    image: ghcr.io/coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+    container_name: lr3-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c '</dev/tcp/localhost/9000'" ]
+      interval: 5s
+      retries: 20
+
+  minio-init:
+    image: ghcr.io/coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+    container_name: lr3-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+    volumes:
+      - ./data:/seed:ro
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 minioadmin minioadmin;
+      do
+        echo 'Waiting for MinIO...';
+        sleep 2;
+      done;
+      mc mb -p local/warehouse || true;
+      if [ -f /seed/events.csv ]; then
+        mc rm --recursive --force local/warehouse/raw/events_csv || true;
+        mc cp /seed/events.csv local/warehouse/raw/events_csv/events.csv;
+        echo 'CSV uploaded to MinIO';
+      else
+        echo 'No /seed/events.csv yet, skipping upload';
+      fi
+      "
+
+  hive-metastore:
+    image: apache/hive:4.2.1
+    container_name: lr3-hive-metastore
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      SERVICE_NAME: metastore
+      HIVE_CUSTOM_CONF_DIR: /hive-custom-conf
+      HADOOP_CLASSPATH: "/opt/hadoop/share/hadoop/tools/lib/hadoop-aws-3.4.1.jar:/opt/hadoop/share/hadoop/tools/lib/bundle-2.24.6.jar"
+      SERVICE_OPTS: "-Djavax.jdo.option.ConnectionURL=jdbc:derby:;databaseName=/opt/hive/data/warehouse/metastore_db;create=true"
+    ports:
+      - "9083:9083"
+    volumes:
+      - hive-metastore-data:/opt/hive/data
+      - ./hive/conf:/hive-custom-conf:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "bash -c '</dev/tcp/localhost/9083'" ]
+      interval: 5s
+      retries: 30
+
+  trino:
+    image: trinodb/trino:483
+    container_name: lr3-trino
+    depends_on:
+      hive-metastore:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog:ro
+    healthcheck:
+      test: [ "CMD", "/usr/lib/trino/bin/health-check" ]
+      interval: 10s
+      retries: 30
+
+  superset-db:
+    image: postgres:16
+    container_name: lr3-superset-db
+    environment:
+      POSTGRES_DB: superset
+      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset
+    volumes:
+      - superset-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U superset -d superset" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  superset-init:
+    image: lr3-superset:5.0.0
+    build:
+      context: ./superset
+    container_name: lr3-superset-init
+    depends_on:
+      superset-db:
+        condition: service_healthy
+    environment:
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
+    command:
+      - /bin/sh
+      - -c
+      - |
+        superset db upgrade
+        superset fab create-admin \
+          --username admin \
+          --firstname Admin \
+          --lastname User \
+          --email admin@example.com \
+          --password admin || true
+        superset init
+
+  superset:
+    image: lr3-superset:5.0.0
+    build:
+      context: ./superset
+    container_name: lr3-superset
+    depends_on:
+      superset-init:
+        condition: service_completed_successfully
+    environment:
+      SUPERSET_CONFIG_PATH: /app/pythonpath/superset_config.py
+    volumes:
+      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
+    ports:
+      - "8088:8088"
+
+volumes:
+  minio-data:
+  hive-metastore-data:
+  superset-db-data:
