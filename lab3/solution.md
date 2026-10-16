@@ -842,3 +842,49 @@ gzip.
 **Вывод**
 Колоночный формат даёт основной выигрыш, когда запрос читает часть колонок (Q1, Q2). Если нужны все колонки,
 остаётся только выигрыш в объёме хранения и чтения.
+
+## Создание дэшбордов
+
+Superset UI по ссылке - `http://localhost:8088`.
+
+Подключаем trino к superset:
+
+```shell
+docker exec lr3-superset superset set-database-uri -d trino -u trino://admin@trino:8080/hive
+```
+
+Проверяем подключение в UI
+
+```sql
+select count(*)
+from hogwarts.events_csv; -- 5400000
+select count(*)
+from hogwarts.events_parquet; -- 5400000
+```
+
+Добавлено 4 виджета
+
+- Результаты чемпионата
+- Динамика чемпионата
+- Предвзятость преподавателей
+- Рейтинг студентов
+
+Доступны 2 фильтра:
+
+- День соревнования
+- Факультет (для рейтинга студентов)
+
+![img.png](dashboard.png)
+
+#### Импорт
+
+Дэшборд экспортирован в [superset/hogwarts_dashboard.zip](superset/hogwarts_dashboard.zip)
+
+Импорт:
+
+```shell
+docker cp superset/hogwarts_dashboard.zip lr3-superset:/tmp/
+docker exec lr3-superset superset import-dashboards -p /tmp/hogwarts_dashboard.zip -u admin
+```
+
+Или через UI: Dashboards => Import dashboards => выбрать zip

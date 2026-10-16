@@ -73,6 +73,14 @@ PROFESSORS = {
 PROF_NAMES = list(PROFESSORS)
 PROF_WEIGHTS = [v[0] for v in PROFESSORS.values()]
 
+HEROES = [
+    ("Harry Potter", "Gryffindor", 300, 0),
+    ("Hermione Granger", "Gryffindor", 400, 1),
+    ("Ron Weasley", "Gryffindor", 500, 2),
+    ("Draco Malfoy", "Slytherin", 300, 3),
+]
+HERO_NAMES = {hero[0] for hero in HEROES}
+
 REASONS_PLUS = [
     "Correctly pronounced Wingardium Leviosa",
     "Survived a Potions class without explosions",
@@ -145,6 +153,21 @@ def points_for(rng: random.Random, professor: str, house: str) -> int:
     return rng.randint(-10, 10) or 1
 
 
+def student_name(rng: random.Random, incident_id: int, house: str, points: int) -> str:
+    name = f"{rng.choice(FIRST_NAMES)} {rng.choice(LAST_NAMES)}"
+    if points > 0:
+        for hero, hero_house, mod, rem in HEROES:
+            if house == hero_house and incident_id % mod == rem:
+                return hero
+    if name in HERO_NAMES:
+        first = name.split(" ")[0]
+        i = incident_id
+        while name in HERO_NAMES:
+            name = f"{first} {LAST_NAMES[i % len(LAST_NAMES)]}"
+            i += 1
+    return name
+
+
 def generate_batch(rng: random.Random, start_id: int, n: int) -> list:
     profs = rng.choices(PROF_NAMES, weights=PROF_WEIGHTS, k=n)
     rows = []
@@ -169,12 +192,13 @@ def generate_batch(rng: random.Random, start_id: int, n: int) -> list:
         filch_anger = min(10, rng.randint(6, 9) + (1 if peeves else 0) + (1 if damage > 100 else 0))
         owl = points < -30 or rng.random() < 0.02
         howler = owl and rng.random() < 0.3
+        name = student_name(rng, incident_id, house, points)
 
         rows.append((
             incident_id,
             ts.strftime("%Y-%m-%d %H:%M:%S"),
             ts.strftime("%Y-%m-%d"),
-            f"{rng.choice(FIRST_NAMES)} {rng.choice(LAST_NAMES)}",
+            name,
             house,
             rng.randint(1, 7),
             professor,
