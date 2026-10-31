@@ -64,8 +64,15 @@ registerJob(
 )
 
 registerJob(
-    "smoke",
-    "com.quicklybly.bigdata.spark.SmokeCheck",
-    "Start local Spark and read the log with both RDD and DataFrame APIs",
-    listOf(dataDir.file("access.log").asFile.path),
+    "rddJob",
+    "com.quicklybly.bigdata.spark.RddIpCount",
+    "Count requests per IP with the RDD API",
+    listOf(dataDir.file("access.log").asFile.path, dataDir.dir("out/rdd").asFile.path),
+)
+
+registerJob(
+    "dfJob",
+    "com.quicklybly.bigdata.spark.DataFrameIpCount",
+    "Count requests per IP with the DataFrame API",
+    listOf(dataDir.file("access.log").asFile.path, dataDir.dir("out/df").asFile.path),
 )
