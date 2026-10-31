@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/big-data-course.iml" filepath="$PROJECT_DIR$/big-data-course.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/topk-jobs.main.iml" filepath="$PROJECT_DIR$/.idea/modules/topk-jobs.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/topk-jobs.test.iml" filepath="$PROJECT_DIR$/.idea/modules/topk-jobs.test.iml" />
     </modules>
   </component>
 </project>
