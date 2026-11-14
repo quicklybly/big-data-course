@@ -40,52 +40,22 @@ Job из ДЗ 4 (число запросов по IP) расширен, чтоб
 переиспользовался несколькими actions:
 
 ```java
-Dataset<Row> parsed = spark.read().text(input)
+Dataset<Row> parsed = spark.read().text(input)          // промежуточный DF
         .filter(col("value").rlike(LogFormat.IP_REGEX))
-        .select(regexp_extract(...,1).
+        .select(
+                regexp_extract(col("value"), LogFormat.LINE_REGEX, 1).as("ip"),
+                regexp_extract(col("value"), LogFormat.LINE_REGEX, 3).as("url"),
+                regexp_extract(col("value"), LogFormat.LINE_REGEX, 4).as("status"),
+                regexp_extract(col("value"), LogFormat.LINE_REGEX, 5).as("bytes"));
+Dataset<Row> counts = parsed.groupBy("ip").count();
 
-as("ip"), ..."url","status","bytes");   // промежуточный DF
-Dataset<Row> counts = parsed.groupBy("ip").count();                            // результат ДЗ 4
-
-counts.
-
-count();                                    // 1. уникальные IP          (ДЗ 4)
-counts.
-
-agg(sum("count")).
-
-first();                  // 2. валидные строки        (ДЗ 4)
-counts.
-
-orderBy(desc("count")).
-
-limit(10);           // 3. топ-10 IP              (ДЗ 4)
-parsed.
-
-groupBy("status").
-
-count();                  // 4. запросы по статусам
-parsed.
-
-groupBy("url").
-
-count().
-
-orderBy(...);        // 5. топ-10 URL
-parsed.
-
-agg(sum("bytes")).
-
-first();                  // 6. суммарный трафик
-counts.
-
-orderBy("ip").
-
-coalesce(1).
-
-write().
-
-csv(out); // 7. результат в один файл  (ДЗ 4)
+counts.count();
+counts.agg(sum("count")).first();
+counts.orderBy(desc("count")).limit(10);
+parsed.groupBy("status").count();
+parsed.groupBy("url").count().orderBy(desc("count"));
+parsed.agg(sum("bytes")).first();
+counts.orderBy("ip").coalesce(1).write().csv(output);
 ```
 
 ## Методика изменерения
