@@ -25,6 +25,8 @@ public class DataFrameExperiment {
             "repartition-ip-18",      // .repartition(18, ip) before groupBy(ip): optimizer reuses it, no 2nd exchange
             "shuffle-18",             // spark.sql.shuffle.partitions = 18 (= cores)
             "cache-parsed+shuffle-18",
+            "cache-counts+shuffle-18",
+            "cache-both+shuffle-18",  // persist parsed AND cache counts
             "aqe",                    // baseline + AQE: coalesces shuffle partitions itself
             "coalesce-2"              // negative case: input squeezed to 2 partitions
     );
@@ -49,8 +51,8 @@ public class DataFrameExperiment {
 
     private static String job(SparkSession spark, String input, String output, String mode) {
         Bench.deleteRecursively(Path.of(output));
-        boolean cacheParsed = mode.startsWith("cache-parsed");
-        boolean cacheCounts = mode.equals("cache-counts");
+        boolean cacheParsed = mode.startsWith("cache-parsed") || mode.startsWith("cache-both");
+        boolean cacheCounts = mode.startsWith("cache-counts") || mode.startsWith("cache-both");
         spark.conf().set("spark.sql.shuffle.partitions", mode.contains("shuffle-18") ? "18" : "200");
         spark.conf().set("spark.sql.adaptive.enabled", String.valueOf(mode.equals("aqe")));
 
@@ -114,7 +116,7 @@ public class DataFrameExperiment {
         System.out.printf("  [%s] partitions: input=%d, per-IP counts=%d%n",
                 mode, lines.rdd().getNumPartitions(), counts.rdd().getNumPartitions());
         for (var info : spark.sparkContext().getRDDStorageInfo()) {
-            System.out.printf("  [%s] cached: %s, %d/%d partitions, memory %.1f MB%n", mode, info.name(),
+            System.out.printf("  [%s] cached: %s, %d/%d partitions, memory %.1f MB%n", mode, info.name().lines().findFirst().orElse("?"),
                     info.numCachedPartitions(), info.numPartitions(), info.memSize() / 1024.0 / 1024.0);
         }
         System.out.println("  [" + mode + "] physical plan of per-IP counts:");
